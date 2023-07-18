@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>OpenAI Audio Chat</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Audio Chat">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="description" content="Real-time voice chat with OpenAI GPT">
+    
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="icons/splash/iphone5_splash.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash/iphone6_splash.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash/iphoneplus_splash.png" media="(device-width: 621px) and (device-height: 1104px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="icons/splash/iphonex_splash.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="icons/splash/iphonexr_splash.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash/iphonexsmax_splash.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="icons/splash/ipad_splash.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash/ipadpro1_splash.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash/ipadpro2_splash.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash/ipadpro3_splash.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
+
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/apple/touch-icon-ipad.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/apple/touch-icon-ipad-retina.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="shortcut icon" href="favicon.ico">
+</head>
+
+<body>
+    <div class="container">
+        <h1>OpenAI Audio Chat</h1>
+
+        <!-- Settings Form -->
+        <div class="collapsible collapsed">
+            <div class="collapsible-header">Settings</div>
+            <div class="collapsible-content">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="apiKey">API Key:</label>
+                        <input type="password" 
+                               id="apiKey" 
+                               name="apiKey" 
+                               required
+                               autocomplete="current-password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model">Model:</label>
+                        <input type="text" 
+                               id="model" 
+                               name="model" 
+                               value="gpt-4o-mini-realtime-preview"
+                               required
+                               autocomplete="username">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="voice">Voice:</label>
+                        <select id="voice" name="voice" required>
+                            <option value="alloy">Alloy</option>
+                            <option value="ash">Ash</option>
+                            <option value="ballad">Ballad</option>
+                            <option value="coral">Coral</option>
+                            <option value="echo">Echo</option>
+                            <option value="sage">Sage</option>
+                            <option value="shimmer">Shimmer</option>
+                            <option value="verse">Verse</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="instructions">Instructions:</label>
+                    <textarea id="instructions" 
+                              name="instructions" 
+                              rows="3" 
+                              style="width: 100%"
+                              required></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="saveSettings">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status indicator -->
+        <div class="status-container">
+            <div id="connectionStatus" class="status">Disconnected</div>
+        </div>
+
+        <!-- Single toggle button -->
+        <div class="controls">
+            <button id="toggleButton" class="btn">Start Chat</button>
+        </div>
+
+        <!-- Conversation history -->
+        <div class="conversation">
+            <div id="logContainer" class="log-container"></div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Error</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+                <p id="errorDetails" class="error-details"></p>
+                <p id="errorTimestamp" class="error-timestamp"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="errorDismiss">Dismiss</button>
+                <button id="errorRetry" class="primary">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="openai-client.js?v=1"></script>
+    <script src="app.js?v=1"></script>
+</body>
+
+</html>
