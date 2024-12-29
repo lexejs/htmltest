@@ -180,19 +180,8 @@
             
             try {
                 log('Отправка запроса...');
-                // Отправляем запрос через inline режим
-                tg.switchInlineQuery("request_info");
-                log('Запрос отправлен, ожидаем ответ');
-                
-                // Обработчик для получения ответа
-                tg.onEvent('inlineQueryResult', function(result) {
-                    log('Получен ответ от бота');
-                    const data = JSON.parse(result.message);
-                    document.getElementById('responseData').textContent = 
-                        JSON.stringify(data, null, 2);
-                    log(`Данные получены: ${JSON.stringify(data)}`);
-                });
-
+                tg.sendData("request_info");
+                log('Запрос отправлен');
             } catch (error) {
                 const errorMessage = `Ошибка при отправке: ${error.message}`;
                 document.getElementById('responseData').textContent = errorMessage;
