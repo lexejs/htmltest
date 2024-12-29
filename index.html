@@ -69,6 +69,27 @@
             border-radius: 8px;
             word-break: break-all;
         }
+
+        .logs-area {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 8px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid var(--tg-theme-hint-color);
+        }
+
+        .error-log {
+            color: #ff4444;
+        }
     </style>
 </head> 
 <body>
@@ -82,11 +103,25 @@
             <h3>Ответ от бота:</h3>
             <div id="responseData"></div>
         </div>
+        <div id="logsArea" class="logs-area">
+            <h3>Логи:</h3>
+            <div id="logs"></div>
+        </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+
+        // Функция для логирования
+        function log(message, isError = false) {
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${isError ? 'error-log' : ''}`;
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
 
         function displayUserInfo() {
             const user = tg.initDataUnsafe.user;
@@ -140,41 +175,39 @@
         document.getElementById('sendDataBtn').addEventListener('click', function() {
             tg.HapticFeedback.impactOccurred('medium');
             
-            // Показываем область ответа
             document.getElementById('responseArea').style.display = 'block';
             document.getElementById('responseData').textContent = 'Отправка запроса...';
             
             try {
-                // Отправляем запрос
-                tg.sendData("request_info");
+                log('Отправка запроса...');
+                // Отправляем запрос через inline режим
+                tg.switchInlineQuery("request_info");
+                log('Запрос отправлен, ожидаем ответ');
                 
-                // Обработчик для получения ответа от бота
-                window.Telegram.WebApp.onEvent('message', function(event) {
-                    console.log('Получено сообщение:', event);
+                // Обработчик для получения ответа
+                tg.onEvent('inlineQueryResult', function(result) {
+                    log('Получен ответ от бота');
+                    const data = JSON.parse(result.message);
                     document.getElementById('responseData').textContent = 
-                        `Ответ от бота: ${JSON.stringify(event)}`;
-                });
-
-                // Обработка ошибок
-                window.Telegram.WebApp.onEvent('error', function(error) {
-                    console.error('Ошибка:', error);
-                    document.getElementById('responseData').textContent = 
-                        `Ошибка: ${error}`;
+                        JSON.stringify(data, null, 2);
+                    log(`Данные получены: ${JSON.stringify(data)}`);
                 });
 
             } catch (error) {
-                document.getElementById('responseData').textContent = 
-                    `Ошибка при отправке: ${error.message}`;
+                const errorMessage = `Ошибка при отправке: ${error.message}`;
+                document.getElementById('responseData').textContent = errorMessage;
+                log(errorMessage, true);
             }
         });
 
         // Добавляем общий обработчик для всех событий WebApp
         tg.onEvent('message', function(event) {
-            console.log('WebApp событие:', event);
+            log(`Получено событие: ${JSON.stringify(event)}`);
         });
 
         // Инициализация Telegram Mini App
         tg.ready();
+        log('Приложение инициализировано');
         displayUserInfo();
     </script>
 </body>
