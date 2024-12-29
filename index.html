@@ -45,11 +45,43 @@
             margin-bottom: 20px;
             color: var(--tg-theme-text-color);
         }
+
+        .button {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: opacity 0.2s;
+        }
+
+        .button:hover {
+            opacity: 0.8;
+        }
+
+        .response-area {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 8px;
+            word-break: break-all;
+        }
     </style>
 </head> 
 <body>
     <div class="user-info" id="userInfo">
         <h1 class="header">Информация о пользователе</h1>
+    </div>
+
+    <div class="user-info">
+        <button class="button" id="sendDataBtn">Отправить запрос</button>
+        <div id="responseArea" class="response-area" style="display: none;">
+            <h3>Ответ от бота:</h3>
+            <div id="responseData"></div>
+        </div>
     </div>
 
     <script>
@@ -61,14 +93,12 @@
             const userInfo = document.getElementById('userInfo');
             
             if (user) {
-                // Добавляем фото пользователя, если оно есть
                 if (user.photo_url) {
                     userInfo.innerHTML += `
                         <img src="${user.photo_url}" class="user-photo" alt="User photo">
                     `;
                 }
 
-                // Добавляем всю доступную информацию о пользователе
                 const userDetails = {
                     'ID пользователя': user.id,
                     'Имя': user.first_name,
@@ -84,14 +114,12 @@
                     `;
                 }
 
-                // Добавляем информацию о платформе
                 userInfo.innerHTML += `
                     <h2 class="header">Информация о платформе</h2>
                     <div>Версия платформы: ${tg.platform}</div>
                     <div>Цветовая схема: ${tg.colorScheme}</div>
                 `;
 
-                // Добавляем информацию о чате, если она доступна
                 if (tg.initDataUnsafe.chat) {
                     const chat = tg.initDataUnsafe.chat;
                     userInfo.innerHTML += `
@@ -107,6 +135,43 @@
                 `;
             }
         }
+
+        // Обработчик для кнопки отправки данных
+        document.getElementById('sendDataBtn').addEventListener('click', function() {
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            // Показываем область ответа
+            document.getElementById('responseArea').style.display = 'block';
+            document.getElementById('responseData').textContent = 'Отправка запроса...';
+            
+            try {
+                // Отправляем запрос
+                tg.sendData("request_info");
+                
+                // Обработчик для получения ответа от бота
+                window.Telegram.WebApp.onEvent('message', function(event) {
+                    console.log('Получено сообщение:', event);
+                    document.getElementById('responseData').textContent = 
+                        `Ответ от бота: ${JSON.stringify(event)}`;
+                });
+
+                // Обработка ошибок
+                window.Telegram.WebApp.onEvent('error', function(error) {
+                    console.error('Ошибка:', error);
+                    document.getElementById('responseData').textContent = 
+                        `Ошибка: ${error}`;
+                });
+
+            } catch (error) {
+                document.getElementById('responseData').textContent = 
+                    `Ошибка при отправке: ${error.message}`;
+            }
+        });
+
+        // Добавляем общий обработчик для всех событий WebApp
+        tg.onEvent('message', function(event) {
+            console.log('WebApp событие:', event);
+        });
 
         // Инициализация Telegram Mini App
         tg.ready();
