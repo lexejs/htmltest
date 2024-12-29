@@ -1,69 +1,98 @@
 <!DOCTYPE html>
 <html>
- <head>
- <meta charset="UTF-8" name="viewport" http-equiv="refresh" content="5" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
- <style>
- html { font-family: Helvetica; display: inline-block; margin: 0px; text-align: center;color-scheme: dark !important;}
-  
- p {font-size: 35px;color: #888;margin: 2px;width: 100%;}
- span {font-size: 20px;color: #888;margin: 1px;width: 100%;}
- h2 {text-align: center; text-justify: inter-word; font-size: 120px; margin: 1px;}
- </style>
-
- </head> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <title>Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        html { 
+            font-family: Helvetica; 
+            display: inline-block; 
+            margin: 0px; 
+            text-align: center;
+        }
+        
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+        
+        p { font-size: 35px; margin: 2px; width: 100%; }
+        span { font-size: 20px; margin: 1px; width: 100%; }
+        h2 { text-align: center; text-justify: inter-word; font-size: 120px; margin: 1px; }
+        
+        .button {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+</head> 
 <body>
- 
+    <h2 id="timer">0</h2>
+    <button class="button" id="startButton">Старт</button>
+    <button class="button" id="stopButton">Стоп</button>
+    
+    <h1>Забеги</h1>
+    <div id="runs"></div>
 
-<title>STATS</title>
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Расширяем на весь экран
+        
+        let time = 0;
+        let timerID = null;
+        let isRunning = false;
+        let runs = [];
 
-<h2 id="timer">0</h2>
+        function updateTimer() {
+            const dec = time % 10;
+            const seconds = Math.floor(time / 10) % 60;
+            const minutes = Math.floor(time / 600) % 60;
+            document.getElementById('timer').innerText = 
+                `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}:${dec}`;
+            time++;
+        }
 
-<h1>Runs</h1>
-<p># 14 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 13 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 12 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 11 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 10 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 9 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 8 ⏰ 0:00:00:184</p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 7 ⏰ 0:00:00:184</p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span> 
-<p># 6 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span>  
-<p># 5 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span>
-<p># 4 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span>
-<p># 3 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span>
-<p># 2 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span>
-<p># 1 ⏰ 0:00:00:184 </p>
-<span>🏃 0:00:00:182 🏁 0:00:00:184</span>
+        document.getElementById('startButton').addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                timerID = setInterval(updateTimer, 100);
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        });
 
-<script>
-let time = 200; 
-let timerID = null;
+        document.getElementById('stopButton').addEventListener('click', () => {
+            if (isRunning) {
+                isRunning = false;
+                clearInterval(timerID);
+                runs.unshift({
+                    number: runs.length + 1,
+                    time: document.getElementById('timer').innerText
+                });
+                updateRuns();
+                time = 0;
+                document.getElementById('timer').innerText = "00:00:0";
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        });
 
-function updateTimer() {
- 
- const dec = time % 10;
- const seconds = Math.floor(time / 10) % 60;
- const minutes = Math.floor(time / 600) % 60;
- document.getElementById('timer').innerText = 
- `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}:${dec}`;
- time++;
- }
-updateTimer();
-timerID = setInterval(updateTimer, 100);
+        function updateRuns() {
+            const runsDiv = document.getElementById('runs');
+            runsDiv.innerHTML = runs.map(run => `
+                <p># ${run.number} ⏰ ${run.time}</p>
+                <span>🏃 ${run.time} 🏁 ${run.time}</span>
+            `).join('');
+        }
 
-</script>
+        // Инициализация Telegram Mini App
+        tg.ready();
+    </script>
 </body>
 </html>
