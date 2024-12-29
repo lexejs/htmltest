@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-    <title>Telegram Mini App</title>
+    <title>Telegram Mini App User Info</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         html { 
@@ -16,83 +16,102 @@
         body {
             background-color: var(--tg-theme-bg-color);
             color: var(--tg-theme-text-color);
+            padding: 20px;
         }
         
-        p { font-size: 35px; margin: 2px; width: 100%; }
-        span { font-size: 20px; margin: 1px; width: 100%; }
-        h2 { text-align: center; text-justify: inter-word; font-size: 120px; margin: 1px; }
-        
-        .button {
-            background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none;
-            padding: 10px 20px;
+        .user-info {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .user-info div {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: var(--tg-theme-secondary-bg-color);
             border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px;
+        }
+
+        .user-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .header {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color);
         }
     </style>
 </head> 
 <body>
-    <h2 id="timer">0</h2>
-    <button class="button" id="startButton">Старт</button>
-    <button class="button" id="stopButton">Стоп</button>
-    
-    <h1>Забеги</h1>
-    <div id="runs"></div>
+    <div class="user-info" id="userInfo">
+        <h1 class="header">Информация о пользователе</h1>
+    </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Расширяем на весь экран
-        
-        let time = 0;
-        let timerID = null;
-        let isRunning = false;
-        let runs = [];
+        tg.expand();
 
-        function updateTimer() {
-            const dec = time % 10;
-            const seconds = Math.floor(time / 10) % 60;
-            const minutes = Math.floor(time / 600) % 60;
-            document.getElementById('timer').innerText = 
-                `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}:${dec}`;
-            time++;
-        }
+        function displayUserInfo() {
+            const user = tg.initDataUnsafe.user;
+            const userInfo = document.getElementById('userInfo');
+            
+            if (user) {
+                // Добавляем фото пользователя, если оно есть
+                if (user.photo_url) {
+                    userInfo.innerHTML += `
+                        <img src="${user.photo_url}" class="user-photo" alt="User photo">
+                    `;
+                }
 
-        document.getElementById('startButton').addEventListener('click', () => {
-            if (!isRunning) {
-                isRunning = true;
-                timerID = setInterval(updateTimer, 100);
-                tg.HapticFeedback.impactOccurred('medium');
+                // Добавляем всю доступную информацию о пользователе
+                const userDetails = {
+                    'ID пользователя': user.id,
+                    'Имя': user.first_name,
+                    'Фамилия': user.last_name || 'Не указана',
+                    'Имя пользователя': user.username || 'Не указано',
+                    'Языковой код': user.language_code || 'Не указан',
+                    'Премиум статус': user.is_premium ? 'Да' : 'Нет',
+                };
+
+                for (const [key, value] of Object.entries(userDetails)) {
+                    userInfo.innerHTML += `
+                        <div>${key}: ${value}</div>
+                    `;
+                }
+
+                // Добавляем информацию о платформе
+                userInfo.innerHTML += `
+                    <h2 class="header">Информация о платформе</h2>
+                    <div>Версия платформы: ${tg.platform}</div>
+                    <div>Цветовая схема: ${tg.colorScheme}</div>
+                    <div>Тема: ${tg.themeParams ? JSON.stringify(tg.themeParams) : 'Недоступно'}</div>
+                `;
+
+                // Добавляем информацию о чате, если она доступна
+                if (tg.initDataUnsafe.chat) {
+                    const chat = tg.initDataUnsafe.chat;
+                    userInfo.innerHTML += `
+                        <h2 class="header">Информация о чате</h2>
+                        <div>ID чата: ${chat.id}</div>
+                        <div>Тип: ${chat.type}</div>
+                        <div>Название: ${chat.title}</div>
+                    `;
+                }
+            } else {
+                userInfo.innerHTML += `
+                    <div>Информация о пользователе недоступна</div>
+                `;
             }
-        });
-
-        document.getElementById('stopButton').addEventListener('click', () => {
-            if (isRunning) {
-                isRunning = false;
-                clearInterval(timerID);
-                runs.unshift({
-                    number: runs.length + 1,
-                    time: document.getElementById('timer').innerText
-                });
-                updateRuns();
-                time = 0;
-                document.getElementById('timer').innerText = "00:00:0";
-                tg.HapticFeedback.impactOccurred('medium');
-            }
-        });
-
-        function updateRuns() {
-            const runsDiv = document.getElementById('runs');
-            runsDiv.innerHTML = runs.map(run => `
-                <p># ${run.number} ⏰ ${run.time}</p>
-                <span>🏃 ${run.time} 🏁 ${run.time}</span>
-            `).join('');
         }
 
         // Инициализация Telegram Mini App
         tg.ready();
+        displayUserInfo();
     </script>
 </body>
 </html>
