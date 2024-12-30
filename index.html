@@ -113,6 +113,34 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Функция для проверки initData
+        function validateInitData() {
+            try {
+                // Получаем и проверяем initData
+                const initData = tg.initData;
+                if (!initData) {
+                    log('InitData отсутствует', true);
+                    return null;
+                }
+
+                // Получаем hash параметры
+                const hash = window.location.hash.substring(1);
+                const params = new URLSearchParams(hash);
+                const webAppData = params.get('tgWebAppData');
+                
+                if (webAppData) {
+                    const decodedData = JSON.parse(decodeURIComponent(webAppData));
+                    log('Получены параметры: ' + JSON.stringify(decodedData));
+                    return decodedData;
+                }
+                
+                return null;
+            } catch (error) {
+                log('Ошибка при проверке initData: ' + error.message, true);
+                return null;
+            }
+        }
+
         // Функция для логирования
         function log(message, isError = false) {
             const logsDiv = document.getElementById('logs');
@@ -208,6 +236,13 @@
         // Инициализация Telegram Mini App
         tg.ready();
         log('Приложение инициализировано');
+        
+        // Проверяем initData
+        const initDataParams = validateInitData();
+        if (initDataParams) {
+            log('InitData параметры получены успешно');
+        }
+        
         displayUserInfo();
     </script>
 </body>
