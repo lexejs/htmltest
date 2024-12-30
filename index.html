@@ -123,6 +123,40 @@
             logsDiv.scrollTop = logsDiv.scrollHeight;
         }
 
+        // Обработчик для кнопки отправки данных
+        document.getElementById('sendDataBtn').addEventListener('click', function() {
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            document.getElementById('responseArea').style.display = 'block';
+            document.getElementById('responseData').textContent = 'Отправка запроса...';
+            
+            try {
+                log('Отправка запроса...');
+                tg.sendData("request_info");
+                log('Запрос отправлен');
+            } catch (error) {
+                const errorMessage = `Ошибка при отправке: ${error.message}`;
+                document.getElementById('responseData').textContent = errorMessage;
+                log(errorMessage, true);
+            }
+        });
+
+        // Обработчик для получения ответа от бота
+        tg.onEvent('message', function(event) {
+            log(`Получено событие: ${JSON.stringify(event)}`);
+            try {
+                const response = JSON.parse(event.data);
+                if (response.data) {
+                    document.getElementById('responseArea').style.display = 'block';
+                    document.getElementById('responseData').textContent = 
+                        JSON.stringify(response, null, 2);
+                    log('Получен ответ от бота');
+                }
+            } catch (error) {
+                log(`Ошибка при обработке ответа: ${error.message}`, true);
+            }
+        });
+
         function displayUserInfo() {
             const user = tg.initDataUnsafe.user;
             const userInfo = document.getElementById('userInfo');
@@ -170,29 +204,6 @@
                 `;
             }
         }
-
-        // Обработчик для кнопки отправки данных
-        document.getElementById('sendDataBtn').addEventListener('click', function() {
-            tg.HapticFeedback.impactOccurred('medium');
-            
-            document.getElementById('responseArea').style.display = 'block';
-            document.getElementById('responseData').textContent = 'Отправка запроса...';
-            
-            try {
-                log('Отправка запроса...');
-                tg.sendData("request_info");
-                log('Запрос отправлен');
-            } catch (error) {
-                const errorMessage = `Ошибка при отправке: ${error.message}`;
-                document.getElementById('responseData').textContent = errorMessage;
-                log(errorMessage, true);
-            }
-        });
-
-        // Добавляем общий обработчик для всех событий WebApp
-        tg.onEvent('message', function(event) {
-            log(`Получено событие: ${JSON.stringify(event)}`);
-        });
 
         // Инициализация Telegram Mini App
         tg.ready();
