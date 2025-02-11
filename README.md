@@ -15,7 +15,7 @@ A web-based real-time audio chat application using OpenAI's real-time API and We
 
 ## Usage
 
-1. Visit the [GitHub Pages site](https://your-username.github.io/htmltest/)
+1. Visit [https://lexejs.github.io/htmltest/](https://lexejs.github.io/htmltest/)
 2. Enter your OpenAI API key in the settings
 3. Select your preferred voice model
 4. Click "Start Chat" to begin the conversation
@@ -44,7 +44,7 @@ To run locally:
 
 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/htmltest.git
+git clone https://github.com/lexejs/htmltest.git
 ```
 
 2. Serve the files using a web server (HTTPS required for microphone access)
